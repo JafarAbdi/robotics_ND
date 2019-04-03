@@ -1,6 +1,6 @@
 import numpy as np
 from numpy import array
-from sympy import symbols,cos,sin,pi,simplify,sqrt,atan2
+from sympy import symbols,cos,sin,pi,simplify,sqrt,atan2,var
 from sympy.matrices import Matrix
 
 ###joint variables
@@ -9,10 +9,8 @@ d1,d2,d3,d4,d5,d6,d7 = symbols('d1:8')
 a0,a1,a2,a3,a4,a5,a6 = symbols('a0:7')
 b0,b1,b2,b3,b4,b5,b6 = symbols('b0:7')
 
-th= symbols('th')
-ap= symbols('ap')
-a = symbols('a')
-d = symbols('d')
+# th, ap, a, d = symbols('th ap a d')
+
 
 #DH parameters
 s = {b0:0,a0    :0,d1     :0.75,
@@ -23,42 +21,50 @@ s = {b0:0,a0    :0,d1     :0.75,
      b5:-pi/2,a5:0,d6     :0.193,
      b6:0,a6    :0,d7     :0.11,q7:0}
 
-R_x = Matrix([[ 1, 0, 0, 0],
-              [ 0, cos(ap), -sin(ap), 0],
-              [ 0, sin(ap), cos(ap), 0],
-              [0, 0, 0, 1]])
+def DH_T(ap,th,a,d):
 
-R_z = Matrix([[ cos(th), -sin(th), 0,0],
-              [ sin(th), cos(th), 0,0],
-              [ 0, 0, 1,0],
-              [0, 0, 0, 1]])
+    R_x = Matrix([[ 1, 0, 0, 0],
+                  [ 0, cos(ap), -sin(ap), 0],
+                  [ 0, sin(ap), cos(ap), 0],
+                  [0, 0, 0, 1]])
 
-TX = Matrix([[1, 0, 0, a],
-            [0, 1, 0, 0],
-            [0, 0, 1, 0],
-            [0, 0, 0, 1]])
+    R_z = Matrix([[ cos(th), -sin(th), 0,0],
+                  [ sin(th), cos(th), 0,0],
+                  [ 0, 0, 1,0],
+                  [0, 0, 0, 1]])
 
-TZ = Matrix([[1, 0, 0, 0],
-            [0, 1, 0, 0],
-            [0, 0, 1, d],
-            [0, 0, 0, 1]])
+    TX = Matrix([[1, 0, 0, a],
+                [0, 1, 0, 0],
+                [0, 0, 1, 0],
+                [0, 0, 0, 1]])
 
-DH_T = R_x*TX*R_z*TZ
+    TZ = Matrix([[1, 0, 0, 0],
+                [0, 1, 0, 0],
+                [0, 0, 1, d],
+                [0, 0, 0, 1]])
 
-#for i in range(4):
-#    print(DH_T[i*3:(i+1)*3])
+    DH_T = Matrix(R_x*TX*R_z*TZ)
 
-"""
-DH-type transform
-i-1 to i -> R_x( alpha i-1 )*TX( a i-1 )*R_z( theta i )*TZ( d i )
-"""
+    return DH_T
 
-T0_1 = DH_T.evalf(subs ={ap:s[b0],a:s[a0],th:0,d    :s[d1]})
-T1_2 = DH_T.evalf(subs ={ap:s[b1],a:s[a1],th:s[q2],d:s[d2]})
-T2_3 = DH_T.evalf(subs ={ap:s[b2],a:s[a2],th:0,d    :s[d3]})
-T3_4 = DH_T.evalf(subs ={ap:s[b3],a:s[a3],th:0,d    :s[d4]})
-T4_5 = DH_T.evalf(subs ={ap:s[b4],a:s[a4],th:0,d    :s[d5]})
-T5_6 = DH_T.evalf(subs ={ap:s[b5],a:s[a5],th:0,d    :s[d6]})
-T6_G = DH_T.evalf(subs ={ap:s[b6],a:s[a6],th:s[q7],d:s[d7]})
+# DH-type transform
+# i-1 to i -> R_x( alpha i-1 )*TX( a i-1 )*R_z( theta i )*TZ( d i )
 
-#Ok, now we need to check if our total transformation gets us what we want.Let's see.
+T0_1 = DH_T(b0,a0,0,d1)
+T0_1 = T0_1.subs(s)
+T1_2 = DH_T(b1,a1,q2,d2)
+T1_2 = T1_2.subs(s)
+T2_3 = DH_T(b2,a2,0,d3)
+T2_3 = T2_3.subs(s)
+T3_4 = DH_T(b3,a3,0,d4)
+T3_4 = T3_4.subs(s)
+T4_5 = DH_T(b4,a4,0,d5)
+T4_5 = T4_5.subs(s)
+T5_6 = DH_T(b5,a5,0,d6)
+T5_6 = T5_6.subs(s)
+T6_G = DH_T(b6,a6,q7,d7)
+T6_G = T6_G.subs(s)
+
+T_total = simplify(T0_1 * T1_2  * T2_3 * T3_4 * T4_5 * T5_6 * T6_G)
+
+print(T_total)
