@@ -45,45 +45,20 @@ TZ = Matrix([[1, 0, 0, 0],
 
 DH_T = R_x*TX*R_z*TZ
 
-for i in range(4):
-    print(DH_T[i*3:(i+1)*3])
+#for i in range(4):
+#    print(DH_T[i*3:(i+1)*3])
 
 """
 DH-type transform
 i-1 to i -> R_x( alpha i-1 )*TX( a i-1 )*R_z( theta i )*TZ( d i )
 """
 
-T0_1 = DH_T.evalf(subs={ap:b0,a:a0,th:0,d:d1}))
-T1_2 = DH_T.evalf(subs={ap:b1,a:a1,th:0,d:d1}))
-T2_3 = DH_T.evalf(subs={ap:b2,a:a2,th:0,d:d1}))
-T3_4 = DH_T.evalf(subs={ap:b3,a:a3,th:0,d:d1}))
-T4_5 = DH_T.evalf(subs={ap:b4,a:a4,th:0,d:d1}))
-T5_6 = DH_T.evalf(subs={ap:b5,a:a5,th:0,d:d1}))
-T6_G = DH_T.evalf(subs={ap:b6,a:a6,th:0,d:d1}))
+T0_1 = DH_T.evalf(subs ={ap:s[b0],a:s[a0],th:0,d    :s[d1]})
+T1_2 = DH_T.evalf(subs ={ap:s[b1],a:s[a1],th:s[q2],d:s[d2]})
+T2_3 = DH_T.evalf(subs ={ap:s[b2],a:s[a2],th:0,d    :s[d3]})
+T3_4 = DH_T.evalf(subs ={ap:s[b3],a:s[a3],th:0,d    :s[d4]})
+T4_5 = DH_T.evalf(subs ={ap:s[b4],a:s[a4],th:0,d    :s[d5]})
+T5_6 = DH_T.evalf(subs ={ap:s[b5],a:s[a5],th:0,d    :s[d6]})
+T6_G = DH_T.evalf(subs ={ap:s[b6],a:s[a6],th:s[q7],d:s[d7]})
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    \
+#Ok, now we need to check if our total transformation gets us what we want.Let's see.
