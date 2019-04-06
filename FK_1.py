@@ -13,14 +13,23 @@ b0,b1,b2,b3,b4,b5,b6 = symbols('b0:7')
 
 
 #DH parameters
-s = {b0:        0,          a0:        0,          d1:      0.75,
-     b1:    -pi/2,          a1:     0.35,          d2:         0,      q2:q2-pi/2,
-     b2:        0,          a2:     1.25,          d3:         0,
-     b3:    -pi/2,          a3:   -0.054,          d4:       1.5,
-     b4:     pi/2,          a4:        0,          d5:         0,
-     b5:    -pi/2,          a5:        0,          d6:         0,
-     b6:        0,          a6:        0,          d7:     0.303,      q7:0
+# s = {b0:        0,          a0:        0,          d1:      0.75,
+#      b1:    -pi/2,          a1:     0.35,          d2:         0,      q2:q2-pi/2,
+#      b2:        0,          a2:     1.25,          d3:         0,
+#      b3:    -pi/2,          a3:   -0.054,          d4:       1.5,
+#      b4:     pi/2,          a4:        0,          d5:         0,
+#      b5:    -pi/2,          a5:        0,          d6:         0,
+#      b6:        0,          a6:        0,          d7:     0.303,      q7:0
+#      }
+s = {b0:        0,          a0:        0,          d1:      0.33,
+     b1:        0,          a1:     0.35,          d2:      0.42,      q2:q2-pi/2,
+     b2:        0,          a2:        0,          d3:      1.25,
+     b3:        0,          a3:     0.96,          d4:    -0.054,
+     b4:        0,          a4:     0.54,          d5:         0,
+     b5:        0,          a5:    0.193,          d6:     0.001,
+     b6:        0,          a6:     0.11,          d7:         0,      q7:0
      }
+
 
 def DH_T(ap,a,th,d):
 
@@ -73,20 +82,24 @@ T6_G = T6_G.subs(s)
 
 T0_G = simplify(T0_1 * T1_2  * T2_3 * T3_4 * T4_5 * T5_6 * T6_G)
 
-# R_z = Matrix([[ cos(pi), -sin(pi), 0,0],
-#               [ sin(pi), cos(pi), 0,0],
-#               [ 0, 0, 1,0],
-#               [0, 0, 0, 1]])
-# R_y = Matrix([[cos(-pi/2), 0,sin(-pi/2),0],
-#               [ 0,1, 0,0],
-#               [-sin(-pi/2), 0, cos(-pi/2),0],
-#               [0, 0, 0, 1]])
-#
-# R_corr = simplify(R_z * R_y)
-#
-#T_total = simplify(T0_G * R_corr)
+R_z = Matrix([[ cos(pi), -sin(pi), 0,0],
+              [ sin(pi), cos(pi), 0,0],
+              [ 0, 0, 1,0],
+              [0, 0, 0, 1]])
+R_y = Matrix([[cos(-pi/2), 0,sin(-pi/2),0],
+              [ 0,1, 0,0],
+              [-sin(-pi/2), 0, cos(-pi/2),0],
+              [0, 0, 0, 1]])
+
+R_corr = simplify(R_z * R_y)
+
+# T_total = simplify(T0_G * R_corr)
 
 T_total = simplify(T0_G)
+
+T_n =  T0_1 * T1_2.evalf(subs={q2:pi/2}) * T2_3 * T3_4 * T4_5 * T5_6 * T6_G
+
+print(T_n[0:3,3:4])
 
 # (cos(q2) , 0       , sin(q2), 1.196*sin(q2) + 1.803*cos(q2) + 0.35)
 # (0       , 1       , 0      , 0)
@@ -98,7 +111,7 @@ T_total = simplify(T0_G)
 #Forward Kinematics
 wrist_center = simplify(T0_1 * T1_2 * T2_3 * T3_4)*Matrix([[0],[0],[0],[1]])
 wrist_center = wrist_center.evalf(subs={q2:0})
-print(wrist_center)
+#print(wrist_center)
 
 #Inverse Kinematics
 R0_6 = T_total[0:3,0:3]
@@ -106,7 +119,7 @@ p = T_total[0:3,3:4]
 i = Matrix([[0],[0],[1]])
 wrist_center = p-s[d7]*R0_6*i
 wrist_center = wrist_center.evalf(subs={q2:0})
-print(wrist_center)
+#print(wrist_center)
 
 
 # Calculating End Effector Position
