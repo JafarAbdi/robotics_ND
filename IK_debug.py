@@ -25,7 +25,6 @@ test_cases = {1:[[[2.16135,-1.42635,1.55109],
               4:[],
               5:[]}
 
-
 def test_code(test_case):
     ## Set up code
     ## Do not modify!
@@ -61,7 +60,7 @@ def test_code(test_case):
     d1,d2,d3,d4,d5,d6,d7 = symbols('d1:8')
     a0,a1,a2,a3,a4,a5,a6 = symbols('a0:7')
     b0,b1,b2,b3,b4,b5,b6 = symbols('b0:7')
-
+    
     #DH parameters
     s = {b0:        0,          a0:        0,          d1:      0.75,      q1:q1,
          b1:    -pi/2,          a1:     0.35,          d2:         0,      q2:q2-pi/2,
@@ -71,9 +70,10 @@ def test_code(test_case):
          b5:    -pi/2,          a5:        0,          d6:         0,      q6:q6,
          b6:        0,          a6:        0,          d7:     0.303,      q7:0
          }
+   
 
     #defining transformation matrix function
-    th, ap, a, d = symbols('th ap a d')
+    #th, ap, a, d = symbols('th ap a d')
     def DH_T(ap,a,th,d):
 
         R_x = Matrix([[       1,       0,        0,        0],
@@ -99,18 +99,23 @@ def test_code(test_case):
         DH_T = Matrix(R_x* TX * R_z * TZ)
 
         return DH_T
+    alpha, a, d, q = symbols('alpha a d q')
+    DH = DH_T(alpha, a, d, q)
+    #[cos(q)           ,           -sin(q),           0,             a]
+    #[sin(q)*cos(alpha), cos(alpha)*cos(q), -sin(alpha), -d*sin(alpha)]
+    #[sin(alpha)*sin(q), sin(alpha)*cos(q),  cos(alpha),  d*cos(alpha)]
+    #[0                ,                 0,           0,             1]
 
     #creating individual transforms
-    T0_1 = DH_T(b0,a0,q1,d1).subs(s)
-    T1_2 = DH_T(b1,a1,q2,d2).subs(s)
-    T2_3 = DH_T(b2,a2,q3,d3).subs(s)
-    T3_4 = DH_T(b3,a3,q4,d4).subs(s)
-    T4_5 = DH_T(b4,a4,q5,d5).subs(s)
-    T5_6 = DH_T(b5,a5,q6,d6).subs(s)
+    T0_1  = DH_T(b0,a0,q1,d1).subs(s)
+    T1_2  = DH_T(b1,a1,q2,d2).subs(s)
+    T2_3  = DH_T(b2,a2,q3,d3).subs(s)
+    T3_4  = DH_T(b3,a3,q4,d4).subs(s)
+    T4_5  = DH_T(b4,a4,q5,d5).subs(s)
+    T5_6  = DH_T(b5,a5,q6,d6).subs(s)
     T6_EE = DH_T(b6,a6,q7,d7).subs(s)
-
-    T0_G = simplify(T0_1 * T1_2  * T2_3 * T3_4 * T4_5 * T5_6 * T6EE)
-
+    T0_EE  = T0_1 * T1_2  * T2_3 * T3_4 * T4_5 * T5_6 * T6_EE
+    
     #Extract end-effector position and orientation
     px = req.poses[x].position.x
     py = req.poses[x].position.y
@@ -120,18 +125,16 @@ def test_code(test_case):
             req.poses[x].orientation.z, req.poses[x].orientation.w])
 
     #rotation error
-    R_z = Matrix([[ cos(pi), -sin(pi), 0,0],
-                  [ sin(pi), cos(pi), 0,0],
-                  [ 0, 0, 1,0],
-                  [0, 0, 0, 1]])
-    R_y = Matrix([[cos(-pi/2), 0,sin(-pi/2),0],
-                  [ 0,1, 0,0],
-                  [-sin(-pi/2), 0, cos(-pi/2),0],
-                  [0, 0, 0, 1]])
+    R_z = Matrix([[    cos(pi), -sin(pi),          0],
+                  [    sin(pi),  cos(pi),          0],
+                  [          0,        0,          1]])
+    
+    R_y = Matrix([[ cos(-pi/2),        0, sin(-pi/2)],
+                  [          0,        1,          0],
+                  [ -sin(-pi/2),       0, cos(-pi/2)]])
 
-    R_corr = simplify(R_z * R_y)
-
-
+    R_corr = R_z * R_y
+   
     #find EE rotation matrix
     r,p,y = symbols('r p y')
 
@@ -139,26 +142,27 @@ def test_code(test_case):
                  [       0, cos(r), -sin(r)],
                  [       0, sin(r),  cos(r)]])
 
-    RY = Matrix([[  cos(p),-sin(p),       0],
+    RZ = Matrix([[  cos(p),-sin(p),       0],
                  [  sin(p), cos(p),       0],
                  [       0,      0,       1]])
 
-    RZ = Matrix([[  cos(y),      0,  sin(y)],
+    RY = Matrix([[  cos(y),      0,  sin(y)],
                  [       0,      1,       0],
                  [ -sin(y),      0,  cos(y)]])
 
     R_EE = (RZ * RY * RX) * R_corr
-    R_EE.subs({'r':roll, 'p':pitch, 'y':yaw})
-
+    R_EE = R_EE.subs({'r':roll, 'p':pitch, 'y':yaw})
+    
     EE = Matrix([[px],
                  [py],
                  [pz]])
 
     WC = EE - (0.303 * R_EE[:,2])
+    print(WC)
 
     #THETA1
     theta1 = atan2(WC[1],WC[0])
-
+    print('got theta1',theta1)
     #TRIANGLE FOR THETA 1 and 2
     a = 1.501
     b = sqrt(pow((sqrt(WC[0]*WC[0]+WC[1]*WC[1])-0.35) ,2) + pow((WC[2]-0.75), 2))
@@ -170,21 +174,24 @@ def test_code(test_case):
 
     #THETA2
     theta2 = pi/2 - A - atan2(WC[2]-0.75, sqrt(WC[0]*WC[0] + WC[1]*WC[1])-0.35)
-
+    print('got theta 2',theta2)
     #THETA3
     theta3 = pi/2 - (B + 0.036)
-
+    print('got theta 3',theta3)
     #
     R0_3 = T0_1[0:3,0:3] * T1_2[0:3,0:3] * T2_3[0:3,0:3]
     R0_3 = R0_3.evalf(subs={q1: theta1, q2:theta2, q3:theta3})
     R3_6 = R0_3.inv("LU")*R_EE
-
     #THETA4
+    print(R3_6)
     theta4 = atan2(R3_6[2,2], -R3_6[0,2])
+    print('got theta 4',theta4)
     #THETA5
     theta5 = atan2(sqrt(R3_6[0,2]*R3_6[0,2] + R3_6[2,2]*R3_6[2,2]),R3_6[1,2])
+    print('got theta 5',theta5)
     #THETA6
-    theta4 = atan2(-R3_6[1,1], R3_6[1,0])
+    theta6 = atan2(-R3_6[1,1], R3_6[1,0])
+    print('got theta 6',theta6)
 
     ########################################################################################
 
@@ -194,7 +201,7 @@ def test_code(test_case):
 
     ## (OPTIONAL) YOUR CODE HERE!
     FK = T0_EE.evalf(subs={q1:theta1,q2:theta2,q3:theta3,q4:theta4,q5:theta5,q6:theta6})
-
+    
     ## End your code input for forward kinematics here!
     ########################################################################################
 
@@ -252,5 +259,5 @@ def test_code(test_case):
 if __name__ == "__main__":
     # Change test case number for different scenarios
     test_case_number = 1
-
+    print('running test case %s'%test_case_number)
     test_code(test_cases[test_case_number])
