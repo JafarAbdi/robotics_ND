@@ -26,6 +26,8 @@ test_cases = {1:[[[2.16135,-1.42635,1.55109],
               5:[]}
 
 def test_code(test_case):
+
+    time_0 = time.time()
     ## Set up code
     ## Do not modify!
     x = 0
@@ -60,7 +62,7 @@ def test_code(test_case):
     d1,d2,d3,d4,d5,d6,d7 = symbols('d1:8')
     a0,a1,a2,a3,a4,a5,a6 = symbols('a0:7')
     b0,b1,b2,b3,b4,b5,b6 = symbols('b0:7')
-    
+
     #DH parameters
     s = {b0:        0,          a0:        0,          d1:      0.75,      q1:q1,
          b1:    -pi/2,          a1:     0.35,          d2:         0,      q2:q2-pi/2,
@@ -70,7 +72,7 @@ def test_code(test_case):
          b5:    -pi/2,          a5:        0,          d6:         0,      q6:q6,
          b6:        0,          a6:        0,          d7:     0.303,      q7:0
          }
-   
+
 
     #defining transformation matrix function
     #th, ap, a, d = symbols('th ap a d')
@@ -99,6 +101,7 @@ def test_code(test_case):
         DH_T = Matrix(R_x* TX * R_z * TZ)
 
         return DH_T
+
     alpha, a, d, q = symbols('alpha a d q')
     DH = DH_T(alpha, a, d, q)
     #[cos(q)           ,           -sin(q),           0,             a]
@@ -115,7 +118,7 @@ def test_code(test_case):
     T5_6  = DH_T(b5,a5,q6,d6).subs(s)
     T6_EE = DH_T(b6,a6,q7,d7).subs(s)
     T0_EE  = T0_1 * T1_2  * T2_3 * T3_4 * T4_5 * T5_6 * T6_EE
-    
+
     #Extract end-effector position and orientation
     px = req.poses[x].position.x
     py = req.poses[x].position.y
@@ -128,13 +131,13 @@ def test_code(test_case):
     R_z = Matrix([[    cos(pi), -sin(pi),          0],
                   [    sin(pi),  cos(pi),          0],
                   [          0,        0,          1]])
-    
+
     R_y = Matrix([[ cos(-pi/2),        0, sin(-pi/2)],
                   [          0,        1,          0],
                   [ -sin(-pi/2),       0, cos(-pi/2)]])
 
     R_corr = R_z * R_y
-   
+
     #find EE rotation matrix
     r,p,y = symbols('r p y')
 
@@ -152,7 +155,7 @@ def test_code(test_case):
 
     R_EE = (RZ * RY * RX) * R_corr
     R_EE = R_EE.subs({'r':roll, 'p':pitch, 'y':yaw})
-    
+
     EE = Matrix([[px],
                  [py],
                  [pz]])
@@ -193,6 +196,9 @@ def test_code(test_case):
     theta6 = atan2(-R3_6[1,1], R3_6[1,0])
     print('got theta 6',theta6)
 
+    time_1 = time.time()
+    print('runtime' = time_1-time_0)
+
     ########################################################################################
 
     ########################################################################################
@@ -201,7 +207,7 @@ def test_code(test_case):
 
     ## (OPTIONAL) YOUR CODE HERE!
     FK = T0_EE.evalf(subs={q1:theta1,q2:theta2,q3:theta3,q4:theta4,q5:theta5,q6:theta6})
-    
+
     ## End your code input for forward kinematics here!
     ########################################################################################
 
