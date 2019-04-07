@@ -1,5 +1,3 @@
-
-
 #!/usr/bin/env python
 
 # Copyright (C) 2017 Udacity Inc.
@@ -30,78 +28,58 @@ def handle_calculate_IK(req):
 
         ### Your FK code here
         # Create symbols
-
-    	###joint variables
     	q1,q2,q3,q4,q5,q6,q7 = symbols('q1:8')
-    	d1,d2,d3,d4,d5,d6,d7 = symbols('d1:8')
-    	a0,a1,a2,a3,a4,a5,a6 = symbols('a0:7')
-    	b0,b1,b2,b3,b4,b5,b6 = symbols('b0:7')
-
-    	#DH parameters
-    	s = {b0:        0,          a0:        0,          d1:      0.75,
-         	b1:    -pi/2,          a1:     0.35,          d2:         0,      q2:q2-pi/2,
-         	b2:        0,          a2:     1.25,          d3:         0,
-         	b3:    -pi/2,          a3:   -0.054,          d4:       1.5,
-         	b4:     pi/2,          a4:        0,          d5:         0,
-         	b5:    -pi/2,          a5:        0,          d6:         0,
-         	b6:        0,          a6:        0,          d7:     0.303,      q7:0
-         	}
-
+        d1,d2,d3,d4,d5,d6,d7 = symbols('d1:8')
+        a0,a1,a2,a3,a4,a5,a6 = symbols('a0:7')
+        b0,b1,b2,b3,b4,b5,b6 = symbols('b0:7')
+    	# Create Modified DH parameters
+    	s = {b0:        0,          a0:        0,          d1:      0.75,      q1:q1,
+             b1:    -pi/2,          a1:     0.35,          d2:         0,      q2:q2-pi/2,
+             b2:        0,          a2:     1.25,          d3:         0,      q3:q3,
+             b3:    -pi/2,          a3:   -0.054,          d4:       1.5,      q4:q4,
+             b4:     pi/2,          a4:        0,          d5:         0,      q5:q5,
+             b5:    -pi/2,          a5:        0,          d6:         0,      q6:q6,
+             b6:        0,          a6:        0,          d7:     0.303,      q7:0
+             }
+    	# Define Modified DH Transformation matrix
     	def DH_T(ap,a,th,d):
 
-        	R_x = Matrix([[       1,       0,        0,        0],
-                      	[       0, cos(ap), -sin(ap),        0],
-                      	[       0, sin(ap),  cos(ap),        0],
-                      	[       0,        0,        0,       1]])
+            R_x = Matrix([[       1,       0,        0,        0],
+                          [       0, cos(ap), -sin(ap),        0],
+                          [       0, sin(ap),  cos(ap),        0],
+                          [       0,        0,        0,       1]])
 
-        	R_z = Matrix([[ cos(th), -sin(th),        0,       0],
-                      	[ sin(th),  cos(th),        0,       0],
-                      	[       0,        0,        1,       0],
-                      	[       0,        0,        0,       1]])
+            R_z = Matrix([[ cos(th), -sin(th),        0,       0],
+                          [ sin(th),  cos(th),        0,       0],
+                          [       0,        0,        1,       0],
+                          [       0,        0,        0,       1]])
 
-        	TX = Matrix([[1, 0, 0, a],
-                     	[0, 1, 0, 0],
-                     	[0, 0, 1, 0],
-                     	[0, 0, 0, 1]])
+            TX = Matrix([[1, 0, 0, a],
+                         [0, 1, 0, 0],
+                         [0, 0, 1, 0],
+                         [0, 0, 0, 1]])
 
-        	TZ = Matrix([[1, 0, 0, 0],
-                     	[0, 1, 0, 0],
-                     	[0, 0, 1, d],
-                     	[0, 0, 0, 1]])
+            TZ = Matrix([[1, 0, 0, 0],
+                         [0, 1, 0, 0],
+                         [0, 0, 1, d],
+                         [0, 0, 0, 1]])
 
-        	DH_T = Matrix(R_x* TX * R_z * TZ)
+            DH_T = Matrix(R_x* TX * R_z * TZ)
 
-        	return DH_T
-
-        	# [cos(th)        ,-sin(th)          ,0         ,a         ]
-        	# [sin(th)*cos(ap),cos(ap)*cos(th)   ,-sin(ap)  ,-d*sin(ap)]
-        	# [sin(ap)*sin(th),sin(ap)*cos(th)   ,cos(ap)   ,d*cos(ap) ]
-        	# [0              ,0                 ,0         ,1         ]
-
-    	# DH-type transform
-    	# i-1 to i -> R_x( alpha i-1 )*TX( a i-1 )*R_z( theta i )*TZ( d i )
-
-    	T0_1 = DH_T(b0,a0,0,d1)
-    	T0_1 = T0_1.subs(s)
-    	T1_2 = DH_T(b1,a1,q2,d2)
-    	T1_2 = T1_2.subs(s)
-    	T2_3 = DH_T(b2,a2,0,d3)
-    	T2_3 = T2_3.subs(s)
-    	T3_4 = DH_T(b3,a3,0,d4)
-    	T3_4 = T3_4.subs(s)
-    	T4_5 = DH_T(b4,a4,0,d5)
-    	T4_5 = T4_5.subs(s)
-    	T5_6 = DH_T(b5,a5,0,d6)
-    	T5_6 = T5_6.subs(s)
-    	T6_G = DH_T(b6,a6,q7,d7)
-    	T6_G = T6_G.subs(s)
-
-	    T0_G = simplify(T0_1 * T1_2  * T2_3 * T3_4 * T4_5 * T5_6 * T6_G)
-
-	    T_total = simplify(T0_G)
-
-	    #Extract rotation matrices from the transformation matrices
-	    R0_6 = T0_G[0:3,0:3]
+            return DH_T
+    	# Create individual transformation matrices
+    	T0_1  = DH_T(b0,a0,q1,d1).subs(s)
+        T1_2  = DH_T(b1,a1,q2,d2).subs(s)
+        T2_3  = DH_T(b2,a2,q3,d3).subs(s)
+        T3_4  = DH_T(b3,a3,q4,d4).subs(s)
+        T4_5  = DH_T(b4,a4,q5,d5).subs(s)
+        T5_6  = DH_T(b5,a5,q6,d6).subs(s)
+        T6_EE = DH_T(b6,a6,q7,d7).subs(s)
+        T0_EE  = T0_1 * T1_2  * T2_3 * T3_4 * T4_5 * T5_6 * T6_EE
+    	# Extract rotation matrices from the transformation matrices
+    	#
+    	#
+        ###
 
         # Initialize service response
         joint_trajectory_list = []
@@ -109,34 +87,83 @@ def handle_calculate_IK(req):
             # IK code starts here
             joint_trajectory_point = JointTrajectoryPoint()
 
-	        # Extract end-effector position and orientation from request
-	        px,py,pz = T0_G[0:3,3:4]
-	        # roll, pitch, yaw = end-effector orientation
+    	    # Extract end-effector position and orientation from request
+    	    # px,py,pz = end-effector position
+    	    # roll, pitch, yaw = end-effector orientation
             px = req.poses[x].position.x
             py = req.poses[x].position.y
             pz = req.poses[x].position.z
+
             (roll, pitch, yaw) = tf.transformations.euler_from_quaternion(
                 [req.poses[x].orientation.x, req.poses[x].orientation.y,
                     req.poses[x].orientation.z, req.poses[x].orientation.w])
 
             ### Your IK code here
-	    # Compensate for rotation discrepancy between DH parameters and Gazebo
-	    R_z = Matrix([[ cos(pi), -sin(pi), 0,0],
-                      [ sin(pi), cos(pi), 0,0],
-                      [ 0, 0, 1,0],
-                      [0, 0, 0, 1]])
-        R_y = Matrix([[cos(-pi/2), 0,sin(-pi/2),0],
-                      [ 0,1, 0,0],
-                      [-sin(-pi/2), 0, cos(-pi/2),0],
-                      [0, 0, 0, 1]])
+    	    # Compensate for rotation discrepancy between DH parameters and Gazebo
+    	    R_z = Matrix([[    cos(pi), -sin(pi),          0],
+                          [    sin(pi),  cos(pi),          0],
+                          [          0,        0,          1]])
 
-        R_corr = simplify(R_z * R_y)
+            R_y = Matrix([[ cos(-pi/2),        0, sin(-pi/2)],
+                          [          0,        1,          0],
+                          [ -sin(-pi/2),       0, cos(-pi/2)]])
 
-        T_total = simplify(T0_G * R_corr)
+            R_corr = R_z * R_y
 
-	    # Calculate joint angles using Geometric IK method
-	    #
-	    #
+            #find EE rotation matrix
+            r,p,y = symbols('r p y')
+
+            RX = Matrix([[       1,      0,       0],
+                         [       0, cos(r), -sin(r)],
+                         [       0, sin(r),  cos(r)]])
+
+            RZ = Matrix([[  cos(p),-sin(p),       0],
+                         [  sin(p), cos(p),       0],
+                         [       0,      0,       1]])
+
+            RY = Matrix([[  cos(y),      0,  sin(y)],
+                         [       0,      1,       0],
+                         [ -sin(y),      0,  cos(y)]])
+
+            R_EE = (RZ * RY * RX) * R_corr
+            R_EE = R_EE.subs({'r':roll, 'p':pitch, 'y':yaw})
+
+            EE = Matrix([[px],
+                         [py],
+                         [pz]])
+
+            WC = EE - (0.303 * R_EE[:,2])
+    	    # Calculate joint angles using Geometric IK method
+    	    #THETA1
+            theta1 = atan2(WC[1],WC[0])
+
+            #TRIANGLE FOR THETA 1 and 2
+            a = 1.501
+            b = sqrt(pow((sqrt(WC[0]*WC[0]+WC[1]*WC[1])-0.35) ,2) + pow((WC[2]-0.75), 2))
+            c = 1.25
+
+            A = acos((b*b + c*c - a*a)/(2*b*c))
+            B = acos((a*a + c*c - b*b)/(2*a*c))
+            C = acos((b*b + a*a - c*c)/(2*b*a))
+
+            #THETA2
+            theta2 = pi/2 - A - atan2(WC[2]-0.75, sqrt(WC[0]*WC[0] + WC[1]*WC[1])-0.35)
+
+            #THETA3
+            theta3 = pi/2 - (B + 0.036)
+
+            R0_3 = T0_1[0:3,0:3] * T1_2[0:3,0:3] * T2_3[0:3,0:3]
+            R0_3 = R0_3.evalf(subs={q1: theta1, q2:theta2, q3:theta3})
+            R3_6 = R0_3.inv("LU")*R_EE
+
+            #THETA4
+            theta4 = atan2(R3_6[2,2], -R3_6[0,2])
+
+            #THETA5
+            theta5 = atan2(sqrt(R3_6[0,2]*R3_6[0,2] + R3_6[2,2]*R3_6[2,2]),R3_6[1,2])
+
+            #THETA6
+            theta6 = atan2(-R3_6[1,1], R3_6[1,0])
             ###
 
             # Populate response for the IK request
