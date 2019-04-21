@@ -1,2 +1,5 @@
-# pick_and_place
-Pick and place project - Robotics Software Engineer Nanodegree
+# My Udacity Robotics Software Engineer Nanodegree
+
+
+Might want to give this a shot as an ML filter later
+https://jakevdp.github.io/blog/2012/09/12/dynamic-programming-in-python/
