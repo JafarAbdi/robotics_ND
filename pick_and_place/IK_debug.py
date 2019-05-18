@@ -27,7 +27,7 @@ test_cases = {1:[[[2.16135,-1.42635,1.55109],
 
 def test_code(test_case):
 
-    time_0 = time.time()
+    #time_0 = time.time()
     ## Set up code
     ## Do not modify!
     x = 0
@@ -196,8 +196,8 @@ def test_code(test_case):
     theta6 = atan2(-R3_6[1,1], R3_6[1,0])
     print('got theta 6',theta6)
 
-    time_1 = time.time()
-    print('runtime' = time_1-time_0)
+    #time_1 = time.time()
+    #print('runtime' = time_1-time_0)
 
     ########################################################################################
 
